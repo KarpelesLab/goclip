@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/KarpelesLab/goclip?status.svg)](https://godoc.org/github.com/KarpelesLab/goclip)
+
 # GoClip
 
 **WORK IN PROGRESS** This is not ready for use yet.
