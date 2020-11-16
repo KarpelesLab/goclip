@@ -18,15 +18,17 @@ GoClip aims to provide a cross platform API that can be used easily without comp
   * File lists
 * Notifications on clipboard contents updated (Monitor)
 * All operations are done using the appropriate libs (no execution of external commands)
+* On Windows acquiring ownership of the clipboard can take time. Contexts allows setting a timeout and a cancel method allowing for fine control on the process.
 
 ## Code samples
 
 **Warning**: this will not work. This code is only there to illustrate the goal for this project.
 
-## Read from clipboard
+### Read from clipboard
 
 ```go
-	data, err := goclip.Paste(goclip.Text)
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	data, err := goclip.Paste(ctx, goclip.Text)
 	if err != nil {
 		...
 	}
@@ -36,22 +38,24 @@ GoClip aims to provide a cross platform API that can be used easily without comp
 Or
 
 ```go
-	data, _ := goclip.Paste(goclip.Text, goclip.Image, goclip.FileList)
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	data, _ := goclip.Paste(ctx, goclip.Text, goclip.Image, goclip.FileList)
 	switch data.Type() { // data.Type() will return goclip.Invalid if no data
 	case goclip.Image:
 		img, err := data.Image() // converts data into image
 	}
 ```
 
-## Write to clipboard
+### Write to clipboard
 
 ```go
-	err := goclip.Copy("Hello world") // copy text
-	err := goclip.Copy(image.NewRGBA(...)) // copy image
-	err := goclip.Copy(os.Open("...")) // file
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	err := goclip.Copy(ctx, "Hello world") // copy text
+	err := goclip.Copy(ctx, image.NewRGBA(...)) // copy image
+	err := goclip.Copy(ctx, os.Open("...")) // file
 ```
 
-## Monitoring
+### Monitoring
 
 ```go
 	monitor := goclip.NewMonitor()
