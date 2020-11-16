@@ -20,14 +20,15 @@ const (
 
 var (
 	// imported APIs
-	user32           = syscall.MustLoadDLL("user32")
-	openClipboard    = user32.MustFindProc("OpenClipboard")
-	closeClipboard   = user32.MustFindProc("CloseClipboard")
-	emptyClipboard   = user32.MustFindProc("EmptyClipboard")
-	getClipboardData = user32.MustFindProc("GetClipboardData")
-	setClipboardData = user32.MustFindProc("SetClipboardData")
-	shell32          = syscall.MustLoadDLL("shell32")
-	dragQueryFile    = shell32.MustFindProc("DragQueryFileW")
+	user32               = syscall.MustLoadDLL("user32")
+	openClipboard        = user32.MustFindProc("OpenClipboard")
+	closeClipboard       = user32.MustFindProc("CloseClipboard")
+	emptyClipboard       = user32.MustFindProc("EmptyClipboard")
+	getClipboardData     = user32.MustFindProc("GetClipboardData")
+	setClipboardData     = user32.MustFindProc("SetClipboardData")
+	enumClipboardFormats = user32.MustFindProc("EnumClipboardFormats")
+	shell32              = syscall.NewLazyDLL("shell32")
+	dragQueryFile        = shell32.NewProc("DragQueryFileW")
 
 	kernel32     = syscall.NewLazyDLL("kernel32")
 	globalAlloc  = kernel32.NewProc("GlobalAlloc")
@@ -77,4 +78,16 @@ func clear(ctx context.Context) error {
 
 func formats() []uint32 {
 	// note: requires clipboard to be already open
+	var res []uint32
+	var fmt uintptr
+	var err error
+
+	for {
+		fmt, _, err = enumClipboardFormats.Call(fmt)
+		if fmt == 0 || err != nil {
+			break
+		}
+		res = append(res, uint32(fmt))
+	}
+	return res
 }
