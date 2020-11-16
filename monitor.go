@@ -14,6 +14,6 @@ func NewMonitor() (*Monitor, error) {
 
 // Poll should be called when the app regains focus for example, and will check
 // if any change happened to the clipboard.
-func Poll() {
+func (m *Monitor) Poll() {
 	// TODO
 }
