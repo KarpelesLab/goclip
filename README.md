@@ -30,21 +30,25 @@ GoClip aims to provide a cross platform API that can be used easily without comp
 
 ```go
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	data, err := goclip.Paste(ctx, goclip.Text)
+	data, err := goclip.Paste(ctx)
 	if err != nil {
 		...
 	}
-	log.Printf("pasted text: %s", data.String())
+	text, err := data.ToText(ctx)
+	if err != nil {
+		...
+	}
+	log.Printf("pasted text: %s", text)
 ```
 
 Or
 
 ```go
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	data, _ := goclip.Paste(ctx, goclip.Text, goclip.Image, goclip.FileList)
+	data, _ := goclip.Paste(ctx)
 	switch data.Type() { // data.Type() will return goclip.Invalid if no data
 	case goclip.Image:
-		img, err := data.Image() // converts data into image
+		img, err := data.ToImage(ctx) // converts data into image
 	}
 ```
 
@@ -52,7 +56,7 @@ Or
 
 ```go
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	err := goclip.Copy(ctx, "Hello world") // copy text
+	err := goclip.Copy(ctx, "Hello World") // copy text
 	err := goclip.Copy(ctx, image.NewRGBA(...)) // copy image
 	err := goclip.Copy(ctx, os.Open("...")) // file
 ```
@@ -61,11 +65,9 @@ Or
 
 ```go
 	monitor := goclip.NewMonitor()
-	go func() {
-		for _, ev := range monitor.C {
-			...
-		}
-	}()
+	monitor.Subscribe(func(d goclip.Data) error {
+		...
+	})
 	...
-	// call monitor.Poll() when gaining window focus, or on regular interval
+	// call monitor.Poll() when gaining window focus, or on regular but slow-ish interval
 ```

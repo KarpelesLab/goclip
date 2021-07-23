@@ -2,11 +2,11 @@ package goclip
 
 import (
 	"context"
-	"errors"
-	"image"
 )
 
 type Type int
+
+var i = doInit()
 
 const (
 	Invalid Type = iota
@@ -15,21 +15,35 @@ const (
 	FileList
 )
 
-type Data interface {
-	Type() Type
-	String() string
-	Image() image.Image
-	FileList() []string
+func isValidType(value Type) bool {
+	switch value {
+	case Text, Image, FileList:
+		return true
+	default:
+		return false
+	}
 }
 
 func Copy(ctx context.Context, values ...interface{}) error {
-	return errors.New("TODO")
+	value, err := spawnValue(values...)
+	if err != nil {
+		return err
+	}
+	return i.copy(ctx, Default, value)
 }
 
-func Paste(ctx context.Context, types ...Type) (Data, error) {
-	return PasteFrom(ctx, Default, types...)
+func CopyTo(ctx context.Context, board Board, values ...interface{}) error {
+	value, err := spawnValue(values...)
+	if err != nil {
+		return err
+	}
+	return i.copy(ctx, board, value)
 }
 
-func PasteFrom(ctx context.Context, from Board, types ...Type) (Data, error) {
-	return emptyData{}, errors.New("TODO")
+func Paste(ctx context.Context) (Data, error) {
+	return PasteFrom(ctx, Default)
+}
+
+func PasteFrom(ctx context.Context, from Board) (Data, error) {
+	return i.paste(ctx, from)
 }

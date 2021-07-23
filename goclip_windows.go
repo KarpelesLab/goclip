@@ -1,11 +1,17 @@
 //+build windows
+
 package goclip
 
 import (
 	"context"
+	"errors"
 	"syscall"
 	"time"
 )
+
+type internal struct {
+	// ...
+}
 
 // Windows
 // https://docs.microsoft.com/en-us/windows/win32/dataxchg/using-the-clipboard
@@ -38,7 +44,11 @@ var (
 	lstrcpy      = kernel32.NewProc("lstrcpyW")
 )
 
-func open(ctx context.Context) error {
+func doInit() *internal {
+	return &internal{}
+}
+
+func (i *internal) open(ctx context.Context) error {
 	var r uintptr
 	var err error
 	var t *time.Ticker
@@ -64,9 +74,14 @@ func open(ctx context.Context) error {
 	return err
 }
 
-func clear(ctx context.Context) error {
+func (i *internal) copy(ctx context.Context, board Board, values ...interface{}) error {
+	// TODO ...
+	return ErrNoSys
+}
+
+func (i *internal) clear(ctx context.Context) error {
 	// perform clipboard clear
-	if err := open(ctx); err != nil {
+	if err := i.open(ctx); err != nil {
 		return err
 	}
 
@@ -76,7 +91,7 @@ func clear(ctx context.Context) error {
 	return nil
 }
 
-func formats() []uint32 {
+func (i *internal) formats() []uint32 {
 	// note: requires clipboard to be already open
 	var res []uint32
 	var fmt uintptr
@@ -90,4 +105,8 @@ func formats() []uint32 {
 		res = append(res, uint32(fmt))
 	}
 	return res
+}
+
+func (i *internal) monitor(c chan struct{}) error {
+	return errors.New("todo")
 }
