@@ -2,13 +2,6 @@
 #include <Cocoa/Cocoa.h>
 #include <goclip_darwin.h>
 
-#define CLIPBOARD_FORMAT_NONE 0;
-#define CLIPBOARD_FORMAT_UTF8_TEXT 1;
-#define CLIPBOARD_FORMAT_IMAGE_PNG 2;
-#define CLIPBOARD_FORMAT_IMAGE_BMP 3;
-#define CLIPBOARD_FORMAT_IMAGE_TIFF 4;
-#define CLIPBOARD_FORMAT_IMAGE_JPG 5;
-
 #define Invalid 0;
 #define	Text 1;
 #define	Image 2;
