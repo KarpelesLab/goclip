@@ -7,11 +7,6 @@
 #define CLIPBOARD_FORMAT_IMAGE_TIFF 4
 #define CLIPBOARD_FORMAT_IMAGE_JPG 5
 
-NSPasteboard *cocoaPbFactory();
-int cocoaPbChangeCount(NSPasteboard *pb);
-void pasteWriteAddText(char* data, int len);
-void pasteWrite(NSPasteboard* pb);
-
 typedef struct ClipboardInformation {
 	int typeInt;
 	int formatTypeInt;
@@ -23,13 +18,24 @@ typedef struct ClipboardData {
 	int dataLength;
 } ClipboardData;
 
+typedef struct ClipboardInternal {
+	NSPasteboard *pb;
+	ClipboardData *cb;
+	ClipboardInformation *cbi;
+} ClipboardInternal;
+
 typedef struct ClipboardTypeFilter {
-    bool text;
-    bool image;
-    bool files;
+	bool text;
+	bool image;
+	bool files;
 } ClipboardTypeFilter;
 
-void readClipboard(NSPasteboard *pb, ClipboardData* cbData, ClipboardInformation *cbInfo, ClipboardTypeFilter *filter);
-void readInformation(NSPasteboard *pb, ClipboardInformation *cbInfo);
+ClipboardInternal *cocoaPbFactory();
+int cocoaPbChangeCount(ClipboardInternal *sub);
+void pasteWriteAddText(char* data, int len);
+void pasteWrite(ClipboardInternal *sub);
 
-const char* nsstring2cstring(NSString *str);
+void readClipboard(ClipboardInternal *i, ClipboardTypeFilter *filter);
+void readInformation(ClipboardInternal *i);
+
+const char* nsstring2cstring(void *str);
