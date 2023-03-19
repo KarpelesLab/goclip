@@ -185,22 +185,8 @@ func (i *internal) paste(ctx context.Context, board Board, types ...Type) (Data,
 		return nil, ErrNoBoard
 	}
 
-	filter := &C.ClipboardTypeFilter{}
-	for _, e := range types {
-		switch e {
-		case Text:
-			filter.text = true
-		case Image:
-			filter.image = true
-		case FileList:
-			filter.files = true
-		}
-	}
-
-	C.readClipboard(i.sub, filter)
-
 	res := i.spawnData()
-	return res, res.processRead()
+	return res, res.performRead(types...)
 }
 
 func (i *internal) runMonitor() {
