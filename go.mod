@@ -1,8 +1,6 @@
 module github.com/KarpelesLab/goclip
 
-go 1.23.0
-
-toolchain go1.23.1
+go 1.21
 
 require golang.org/x/image v0.25.0
 

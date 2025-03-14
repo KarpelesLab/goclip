@@ -3,29 +3,43 @@ package goclip
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"image"
 	"os"
 	"strings"
 )
 
+// Data is the interface for clipboard data access
+// It provides methods to retrieve clipboard data in various formats
+// and access to platform-specific clipboard formats
 type Data interface {
+	// Type returns the primary type of the clipboard data (Text, Image, FileList)
 	Type() Type
+	// Board returns the clipboard board this data is associated with
 	Board() Board
+	// ToText converts the clipboard data to a string representation
 	ToText(ctx context.Context) (string, error)
+	// ToImage converts the clipboard data to an image representation
 	ToImage(ctx context.Context) (image.Image, error)
+	// FileList returns a list of files if the clipboard contains file references
 	FileList() ([]string, error)
 
 	// direct format accessors using MIME formats
+	// HasFormat checks if data in a specific MIME format exists
 	HasFormat(fmt string) bool
+	// GetFormat retrieves data in a specific MIME format
 	GetFormat(ctx context.Context, fmt string) ([]byte, error)
+	// GetAllFormats returns all available data formats
 	GetAllFormats() ([]DataOption, error)
 }
 
+// StaticDataOption represents a single clipboard data format with MIME type
+// and associated binary data
 type StaticDataOption struct {
-	StaticType string // such as "image/png" or "text/plain", or "text/plain;charset=utf-8"
-	StaticData []byte // actual data
+	// StaticType is the MIME type such as "image/png" or "text/plain;charset=utf-8"
+	StaticType string
+	// StaticData contains the actual binary data
+	StaticData []byte
 }
 
 func (s *StaticDataOption) Type() Type {
@@ -65,10 +79,13 @@ type DataOption interface {
 
 // StaticData is a type of data used to represent a whole clipboard, including
 // multiple formats as made available by the system. Options can either contain
-// instances of StaticDataOption, or objects following the DataOption interface
+// instances of StaticDataOption, or objects following the DataOption interface.
+// This is the primary implementation of the Data interface.
 type StaticData struct {
+	// TargetBoard is the clipboard board this data belongs to
 	TargetBoard Board
-	Options     []DataOption
+	// Options is a list of available clipboard data formats
+	Options []DataOption
 }
 
 func (s *StaticData) Type() Type {
@@ -133,7 +150,35 @@ func (s *StaticData) ToImage(ctx context.Context) (image.Image, error) {
 }
 
 func (s *StaticData) FileList() ([]string, error) {
-	return nil, errors.New("TODO")
+	// Look for file list format in options
+	for _, opt := range s.Options {
+		if mime := opt.Mime(); strings.HasPrefix(mime, "text/uri-list") {
+			data, err := opt.Data(context.Background())
+			if err != nil {
+				return nil, err
+			}
+
+			// Parse URI list - one URI per line
+			files := []string{}
+			for _, line := range strings.Split(string(data), "\n") {
+				line = strings.TrimSpace(line)
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue // Skip empty lines and comments
+				}
+				// Convert URI to file path - basic implementation
+				if strings.HasPrefix(line, "file://") {
+					path := line[7:]
+					files = append(files, path)
+				}
+			}
+
+			if len(files) > 0 {
+				return files, nil
+			}
+		}
+	}
+
+	return nil, os.ErrNotExist
 }
 
 func (s *StaticData) HasFormat(fmt string) bool {

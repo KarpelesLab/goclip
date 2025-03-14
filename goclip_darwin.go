@@ -12,7 +12,6 @@ import "C"
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -67,26 +66,101 @@ func (cb macOSClipboard) ToImage(ctx context.Context) (image.Image, error) {
 	if cb.Type() != Image {
 		return nil, ErrDataNotImage
 	}
-	image, err := png.Decode(bytes.NewReader(cb.data))
+	img, err := png.Decode(bytes.NewReader(cb.data))
 	if err != nil {
-		panic(err) // debug for now
+		return nil, fmt.Errorf("failed to decode PNG image: %w", err)
 	}
-	return image, nil
+	return img, nil
 }
 
 func (cb macOSClipboard) HasFormat(fmt string) bool {
-	//TODO implement me
-	panic("implement me")
+	// Basic implementation that checks if we have data in the format corresponding to fmt
+	switch fmt {
+	case "text/plain":
+		return cb.Type() == Text
+	case "image/png":
+		return cb.Type() == Image
+	case "text/uri-list":
+		return cb.Type() == FileList
+	default:
+		return false
+	}
 }
 
 func (cb macOSClipboard) GetFormat(ctx context.Context, fmt string) ([]byte, error) {
-	//TODO implement me
-	return nil, errors.New("unsupported method (TODO)")
+	// If we don't have data yet, try to read it first
+	if cb.Type() == Invalid {
+		if fmt == "text/plain" {
+			err := cb.performRead(Text)
+			if err != nil {
+				return nil, err
+			}
+		} else if fmt == "image/png" {
+			err := cb.performRead(Image)
+			if err != nil {
+				return nil, err
+			}
+		} else if fmt == "text/uri-list" {
+			err := cb.performRead(FileList)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, os.ErrNotExist
+		}
+	}
+
+	// Check if the format matches what we have
+	switch fmt {
+	case "text/plain":
+		if cb.Type() == Text {
+			return cb.data, nil
+		}
+	case "image/png":
+		if cb.Type() == Image {
+			return cb.data, nil
+		}
+	case "text/uri-list":
+		if cb.Type() == FileList {
+			return cb.data, nil
+		}
+	}
+
+	return nil, os.ErrNotExist
 }
 
 func (cb macOSClipboard) GetAllFormats() ([]DataOption, error) {
-	//TODO implement me
-	return nil, errors.New("unsupported method (TODO)")
+	// If we don't have data yet, try to read it
+	if cb.Type() == Invalid {
+		// Try to read all types
+		err := cb.performRead(Text, Image, FileList)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Return the available format as a DataOption
+	var options []DataOption
+
+	switch cb.Type() {
+	case Text:
+		options = append(options, &StaticDataOption{
+			StaticType: "text/plain",
+			StaticData: cb.data,
+		})
+	case Image:
+		options = append(options, &StaticDataOption{
+			StaticType: "image/png",
+			StaticData: cb.data,
+		})
+	case FileList:
+		options = append(options, &StaticDataOption{
+			StaticType: "text/uri-list",
+			StaticData: cb.data,
+		})
+	}
+
+	return options, nil
 }
 
 func (cb *macOSClipboard) Type() Type {
@@ -113,7 +187,7 @@ func (cb *macOSClipboard) performRead(types ...Type) error {
 		}
 	}
 
-	C.readClipboard(i.sub, filter)
+	C.readClipboard(cb.i.sub, filter)
 
 	return cb.processRead()
 }
@@ -126,18 +200,18 @@ func (cb *macOSClipboard) processRead() error {
 		return err
 	}
 
-	dataLength := C.int(i.sub.cb.dataLength)
-	dataBytes := C.GoBytes(unsafe.Pointer(i.sub.cb.data), dataLength)
+	dataLength := C.int(cb.i.sub.cb.dataLength)
+	dataBytes := C.GoBytes(unsafe.Pointer(cb.i.sub.cb.data), dataLength)
 
 	if dataType == Image {
-		if i.sub.cbi.formatTypeInt == C.CLIPBOARD_FORMAT_IMAGE_TIFF {
-			image, err := tiff.Decode(bytes.NewReader(dataBytes))
+		if cb.i.sub.cbi.formatTypeInt == C.CLIPBOARD_FORMAT_IMAGE_TIFF {
+			img, err := tiff.Decode(bytes.NewReader(dataBytes))
 			if err != nil {
 				return ErrTiffImageDecode
 			}
 			buf := new(bytes.Buffer)
-			png.Encode(buf, image)
-			i.sub.cbi.formatTypeInt = C.CLIPBOARD_FORMAT_IMAGE_PNG
+			png.Encode(buf, img)
+			cb.i.sub.cbi.formatTypeInt = C.CLIPBOARD_FORMAT_IMAGE_PNG
 			dataBytes = buf.Bytes()
 		}
 	}
