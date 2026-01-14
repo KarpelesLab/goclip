@@ -6,6 +6,7 @@ var (
 	ErrFormatUnavailable = errors.New("goclip: requested format was not available")
 	ErrNoSys             = errors.New("goclip: no system is available")
 	ErrNoBoard           = errors.New("goclip: requested board is not available")
+	ErrNoData            = errors.New("goclip: no data available in clipboard")
 	ErrDataNotString     = errors.New("goclip: requested data is not a String")
 	ErrDataNotImage      = errors.New("goclip: requested data is not an Image")
 	ErrDataNotFileList   = errors.New("goclip: requested data is not an FileList")

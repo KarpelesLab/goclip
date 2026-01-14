@@ -195,9 +195,11 @@ func (cb *macOSClipboard) performRead(types ...Type) error {
 // processRead will handle data that was freshly read from the clipboard
 func (cb *macOSClipboard) processRead() error {
 	dataType := Type(cb.i.sub.cbi.typeInt)
-	if ok := isValidType(dataType); !ok {
-		err := fmt.Errorf("goclip: could not find clipboard Type for %d", dataType)
-		return err
+	switch dataType {
+	case Text, Image, FileList:
+		// valid type
+	default:
+		return fmt.Errorf("goclip: could not find clipboard Type for %d", dataType)
 	}
 
 	dataLength := C.int(cb.i.sub.cb.dataLength)

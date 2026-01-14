@@ -1,8 +1,7 @@
 [![GoDoc](https://godoc.org/github.com/KarpelesLab/goclip?status.svg)](https://godoc.org/github.com/KarpelesLab/goclip)
+[![CI](https://github.com/KarpelesLab/goclip/actions/workflows/ci.yml/badge.svg)](https://github.com/KarpelesLab/goclip/actions/workflows/ci.yml)
 
 # GoClip
-
-**WORK IN PROGRESS** This is not ready for use yet.
 
 Manipulate clipboard from Go, using system libraries.
 
@@ -10,7 +9,7 @@ Most clipboard implementations for Go out there rely on external programs to han
 
 GoClip aims to provide a cross platform API that can be used easily without compromise on what can be done.
 
-## Target features
+## Features
 
 * Easily read from or write to the clipboard
 * Support for selection clipboard on X11
@@ -23,8 +22,6 @@ GoClip aims to provide a cross platform API that can be used easily without comp
 * On Windows acquiring ownership of the clipboard can take time. Contexts allows setting a timeout and a cancel method allowing for fine control on the process.
 
 ## Code samples
-
-**Warning**: this will not work. This code is only there to illustrate the goal for this project.
 
 ### Read from clipboard
 
@@ -64,7 +61,10 @@ Or
 ### Monitoring
 
 ```go
-	monitor := goclip.NewMonitor()
+	monitor, err := goclip.NewMonitor()
+	if err != nil {
+		...
+	}
 	monitor.Subscribe(func(d goclip.Data) error {
 		...
 	})

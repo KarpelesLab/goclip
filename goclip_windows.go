@@ -89,7 +89,7 @@ func (i *internal) copy(ctx context.Context, board Board, values ...interface{})
 	defer closeClipboard.Call()
 
 	// Empty the clipboard
-	r, _, err := emptyClipboard.Call()
+	r, _, _ := emptyClipboard.Call()
 	if r == 0 {
 		return errors.New("failed to empty clipboard")
 	}
