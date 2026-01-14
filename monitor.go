@@ -9,8 +9,7 @@ type MonitorCallback func(Data) error
 // Monitor returns a new clipboard monitor that can capture events from the
 // clipboard based on various rules.
 type Monitor struct {
-	info interface{}
-	cb   []MonitorCallback
+	cb []MonitorCallback
 }
 
 func NewMonitor() (*Monitor, error) {

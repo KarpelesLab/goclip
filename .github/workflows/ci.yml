@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
+          - macos-15-intel
+          - windows-latest
+        go-version:
+          - '1.23'
+          - '1.24'
+          - '1.25'
+        include:
+          - os: ubuntu-latest
+            name: Linux (amd64)
+          - os: ubuntu-24.04-arm
+            name: Linux (arm64)
+          - os: macos-latest
+            name: macOS (Apple Silicon)
+          - os: macos-15-intel
+            name: macOS (Intel)
+          - os: windows-latest
+            name: Windows (amd64)
+
+    name: ${{ matrix.name }} / Go ${{ matrix.go-version }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v ./...

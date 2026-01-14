@@ -28,7 +28,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -527,14 +526,10 @@ func (i *internal) spawnData(sel, prop C.xcb_atom_t) Data {
 	reply := C.xcb_get_property_reply(i.dpy, C.xcb_get_property(i.dpy, 1, i.win, prop, C.XCB_ATOM_ATOM, 0, 300), nil)
 	defer C.free(unsafe.Pointer(reply))
 
-	atomsT := (uintptr)(C.xcb_get_property_value(reply))
+	atomsPtr := C.xcb_get_property_value(reply)
 	cnt := C.xcb_get_property_value_length(reply) / 4
 
-	var atoms []C.xcb_atom_t
-	sh := (*reflect.SliceHeader)(unsafe.Pointer(&atoms))
-	sh.Data = atomsT
-	sh.Len = int(cnt)
-	sh.Cap = int(cnt)
+	atoms := unsafe.Slice((*C.xcb_atom_t)(atomsPtr), int(cnt))
 
 	var formats []DataOption
 

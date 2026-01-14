@@ -21,16 +21,6 @@ const (
 	FileList
 )
 
-// isValidType checks if the given Type is valid
-func isValidType(value Type) bool {
-	switch value {
-	case Text, Image, FileList:
-		return true
-	default:
-		return false
-	}
-}
-
 // Copy copies the given values to the default clipboard
 func Copy(ctx context.Context, values ...interface{}) error {
 	value, err := spawnValue(values...)
