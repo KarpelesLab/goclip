@@ -21,6 +21,12 @@ GoClip aims to provide a cross platform API that can be used easily without comp
 * All operations are done using the appropriate libs (no execution of external commands)
 * On Windows acquiring ownership of the clipboard can take time. Contexts allows setting a timeout and a cancel method allowing for fine control on the process.
 
+## Platform notes
+
+* **Linux**: Uses X11 (xcb) for clipboard access. On Wayland, this requires XWayland to be running. Native Wayland clipboard support is not currently implemented.
+* **macOS**: Uses native Cocoa APIs.
+* **Windows**: Uses native Win32 APIs.
+
 ## Code samples
 
 ### Read from clipboard
